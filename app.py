@@ -290,6 +290,15 @@ def alerts():
         else:
             current_store = selected_store
         
+        # Check if inventory exists and generate alerts if needed
+        if os.path.exists(inventory_file_path):
+            inventory_manager.inventory = inventory_manager.load_inventory()
+            if len(inventory_manager.inventory) > 0 and len(alert_system.alerts) == 0:
+                # Generate alerts if inventory exists but no alerts
+                alert_system.check_stock_alerts(inventory_manager, forecast_results_all, store=current_store)
+                alert_system.check_expiry_alerts(inventory_manager, store=current_store)
+                alert_system.check_daily_restock_alerts(inventory_manager, store=current_store)
+        
         all_alerts = alert_system.get_unread_alerts(store=current_store)
         alert_summary = alert_system.get_alert_summary(store=current_store)
         
@@ -299,6 +308,9 @@ def alerts():
                              selected_store=current_store if current_store else 'All Stores')
     except Exception as e:
         print(f"Error in alerts: {e}")
+        import traceback
+        traceback.print_exc()
+        flash(f'Error loading alerts: {str(e)}', 'danger')
         return render_template('alerts.html', alerts=[], alert_summary={'total_unread': 0}, selected_store=selected_store if selected_store else 'All Stores')
 
 @app.route('/mark_alert_read/<int:alert_id>')
