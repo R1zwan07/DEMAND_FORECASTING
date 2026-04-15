@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Restock Recommendations{% endblock %}
+
+{% block content %}
+<div class="main-header">
+    <h1>🔄 Smart Restock Recommendations</h1>
+    <p>AI-powered suggestions for optimal inventory levels</p>
+</div>
+
+<!-- Restock Summary -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <h3>Low Stock Items</h3>
+        <div class="metric-value">{{ low_stock_items|length }}</div>
+        <div class="metric-label">Need immediate restock</div>
+    </div>
+    <div class="metric-card">
+        <h3>Daily Items</h3>
+        <div class="metric-value">{{ daily_restock|length }}</div>
+        <div class="metric-label">Perishable restock needed</div>
+    </div>
+    <div class="metric-card">
+        <h3>Total Investment</h3>
+        <div class="metric-value">₹{{ (low_stock_items|sum(attribute='reorder_quantity') * 50)|int }}</div>
+        <div class="metric-label">Estimated restock cost</div>
+    </div>
+</div>
+
+<!-- Low Stock Items -->
+<div class="card">
+    <h2 class="card-title">⚠️ Items Below Reorder Level</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Current Stock</th>
+                    <th>Reorder Level</th>
+                    <th>Forecast Demand (7d)</th>
+                    <th>Days Until Empty</th>
+                    <th>Recommended Order</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in low_stock_items %}
+                <tr>
+                    <td><strong>{{ item.product }}</strong></td>
+                    <td style="color: #ef4444; font-weight: bold;">{{ item.current_stock }} units</td>
+                    <td>{{ item.reorder_level }} units</td>
+                    <td>{{ item.forecast_demand }} units</td>
+                    <td>
+                        {% set days_left = (item.current_stock / item.daily_consumption_rate)|int if item.daily_consumption_rate else 0 %}
+                        {% if days_left <= 2 %}
+                            <span style="color: #ef4444;">{{ days_left }} days</span>
+                        {% else %}
+                            <span style="color: #f59e0b;">{{ days_left }} days</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ item.reorder_quantity }} units</strong></td>
+                    <td>
+                        <button onclick="restockItem('{{ item.product }}', {{ item.reorder_quantity }})" class="btn btn-primary" style="padding: 5px 15px; width: auto;">Restock Now</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Daily Restock Items -->
+{% if daily_restock %}
+<div class="card">
+    <h2 class="card-title">🥛 Daily Restock Required (Perishable Items)</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Current Stock</th>
+                    <th>Daily Consumption</th>
+                    <th>Days Until Empty</th>
+                    <th>Suggested Restock</th>
+                    <th>Best Time</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in daily_restock %}
+                <tr>
+                    <td><strong>{{ item.product }}</strong></td>
+                    <td>{{ item.quantity }} units</td>
+                    <td>{{ item.daily_consumption_rate }} units/day</td>
+                    <td style="color: #ef4444;">{{ (item.quantity / item.daily_consumption_rate)|int }} days</td>
+                    <td><strong>{{ item.suggested_restock }} units</strong></td>
+                    <td>
+                        {% if item.product in ['Milk', 'Bread'] %}
+                            Morning (6-8 AM)
+                        {% elif item.product in ['Yogurt', 'Juice'] %}
+                            Afternoon (12-2 PM)
+                        {% else %}
+                            Anytime
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button onclick="restockItem('{{ item.product }}', {{ item.suggested_restock }})" class="btn btn-primary" style="padding: 5px 15px; width: auto;">Order Now</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Bulk Restock Section -->
+<div class="card">
+    <h2 class="card-title">📦 Bulk Restock Recommendations</h2>
+    <div class="alert alert-info">
+        <strong>💡 Smart Restock Strategy:</strong><br>
+        Based on your sales patterns and forecast, here's the optimal restock plan:
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Items to Restock</th>
+                    <th>Total Units</th>
+                    <th>Estimated Cost</th>
+                    <th>Supplier Lead Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>🥛 Dairy</td>
+                    <td>Milk, Yogurt, Butter, Cheese</td>
+                    <td>250 units</td>
+                    <td>₹12,500</td>
+                    <td>Daily</td>
+                </tr>
+                <tr>
+                    <td>🍞 Bakery</td>
+                    <td>Bread</td>
+                    <td>80 units</td>
+                    <td>₹4,000</td>
+                    <td>Daily</td>
+                </tr>
+                <tr>
+                    <td>🥤 Beverages</td>
+                    <td>Juice, Coffee</td>
+                    <td>150 units</td>
+                    <td>₹7,500</td>
+                    <td>2-3 days</td>
+                </tr>
+                <tr>
+                    <td>🍚 Groceries</td>
+                    <td>Rice, Sugar, Salt</td>
+                    <td>300 units</td>
+                    <td>₹15,000</td>
+                    <td>5-7 days</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function restockItem(product, quantity) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/restock_action';
+    
+    const productInput = document.createElement('input');
+    productInput.type = 'hidden';
+    productInput.name = 'product';
+    productInput.value = product;
+    
+    const qtyInput = document.createElement('input');
+    qtyInput.type = 'hidden';
+    qtyInput.name = 'quantity';
+    qtyInput.value = quantity;
+    
+    form.appendChild(productInput);
+    form.appendChild(qtyInput);
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+{% endblock %}

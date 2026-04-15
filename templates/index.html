@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Inventory Management{% endblock %}
+
+{% block content %}
+<div class="main-header">
+    <h1>📊 AI-Based Demand Forecasting & Inventory Management</h1>
+    <p>Powered by Machine Learning | Smart Alerts | Expiry Tracking | Auto Restock</p>
+</div>
+
+<!-- Alert Summary Cards -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <h3>🔔 Unread Alerts</h3>
+        <div class="metric-value">{{ alert_summary.total_unread if alert_summary else 0 }}</div>
+        <div class="metric-label">
+            🔴 High: {{ alert_summary.high_priority if alert_summary else 0 }} | 
+            🟡 Medium: {{ alert_summary.medium_priority if alert_summary else 0 }} | 
+            🔵 Low: {{ alert_summary.low_priority if alert_summary else 0 }}
+        </div>
+    </div>
+    <div class="metric-card">
+        <h3>📦 Active Products</h3>
+        <div class="metric-value">-</div>
+        <div class="metric-label">Run forecast to see data</div>
+    </div>
+    <div class="metric-card">
+        <h3>⚠️ Critical Stock</h3>
+        <div class="metric-value" style="color: #ef4444;">-</div>
+        <div class="metric-label">Run forecast to see data</div>
+    </div>
+    <div class="metric-card">
+        <h3>📅 Expiring Soon</h3>
+        <div class="metric-value" style="color: #f59e0b;">-</div>
+        <div class="metric-label">Run forecast to see data</div>
+    </div>
+</div>
+
+<!-- Upload Section -->
+<div class="card">
+    <h2 class="card-title">🎯 Upload Sales Data & Forecast</h2>
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('forecast') }}">
+        <div class="form-group">
+            <label for="file">📁 Upload Sales Data (CSV)</label>
+            <input type="file" id="file" name="file" accept=".csv" required>
+            <small style="color: #666;">Format: Date, Store, Product, Sales</small>
+        </div>
+        
+        <div id="data-preview" style="display: none;">
+            <div class="form-group">
+                <label for="product">🎯 Select Product</label>
+                <select id="product" name="product" required>
+                    <option value="">-- Select Product --</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="store">🏪 Select Store</label>
+                <select id="store" name="store" required>
+                    <option value="">-- Select Store --</option>
+                </select>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" id="forecast-btn" disabled>🔮 Run AI Forecast</button>
+    </form>
+</div>
+
+<!-- Info Section - No inventory shown until forecast -->
+<div class="card">
+    <h2 class="card-title">📋 How It Works</h2>
+    <div class="alert alert-info">
+        <strong>📌 Steps to get started:</strong><br>
+        1. Upload your sales data CSV file (Date, Store, Product, Sales columns)<br>
+        2. Select a product and store from the dropdown<br>
+        3. Click "Run AI Forecast" to generate predictions<br>
+        4. View forecast results, inventory status, and alerts<br>
+        5. Use the store filter in the navbar to view different stores
+    </div>
+</div>
+
+<script>
+const fileInput = document.getElementById('file');
+const productSelect = document.getElementById('product');
+const storeSelect = document.getElementById('store');
+const forecastBtn = document.getElementById('forecast-btn');
+const dataPreview = document.getElementById('data-preview');
+
+fileInput.addEventListener('change', async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    forecastBtn.disabled = true;
+    forecastBtn.textContent = '⏳ Loading...';
+    dataPreview.style.display = 'none';
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+        const response = await fetch('/preview', { method: 'POST', body: formData });
+        const data = await response.json();
+        
+        console.log('Response:', data);
+        
+        if (data.success) {
+            // Populate products dropdown
+            productSelect.innerHTML = '<option value="">-- Select Product --</option>';
+            if (data.products && data.products.length > 0) {
+                data.products.forEach(p => {
+                    productSelect.innerHTML += `<option value="${p}">${p}</option>`;
+                });
+            } else {
+                productSelect.innerHTML += '<option value="" disabled>No products found</option>';
+            }
+            
+            // Populate stores dropdown
+            storeSelect.innerHTML = '<option value="">-- Select Store --</option>';
+            if (data.stores && data.stores.length > 0) {
+                data.stores.forEach(s => {
+                    storeSelect.innerHTML += `<option value="${s}"> ${s}</option>`;
+                });
+            } else {
+                storeSelect.innerHTML += '<option value="" disabled>No stores found</option>';
+            }
+            
+            dataPreview.style.display = 'block';
+            forecastBtn.disabled = true;
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+            forecastBtn.disabled = true;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error loading file: ' + error.message);
+        forecastBtn.disabled = true;
+    } finally {
+        forecastBtn.textContent = '🔮 Run AI Forecast';
+    }
+});
+
+function checkSelections() {
+    forecastBtn.disabled = !(productSelect.value && storeSelect.value);
+}
+
+productSelect.addEventListener('change', checkSelections);
+storeSelect.addEventListener('change', checkSelections);
+</script>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Alert Center{% endblock %}
+
+{% block content %}
+<div class="main-header">
+    <h1>🔔 Smart Alert Center</h1>
+    <p>Real-time notifications for stock, expiry, restock, and forecast alerts</p>
+</div>
+
+<!-- Alert Summary -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <h3>Total Unread</h3>
+        <div class="metric-value">{{ alert_summary.total_unread }}</div>
+        <div class="metric-label">Pending notifications</div>
+    </div>
+    <div class="metric-card">
+        <h3>High Priority</h3>
+        <div class="metric-value" style="color: #ef4444;">{{ alert_summary.high_priority }}</div>
+        <div class="metric-label">Urgent action needed</div>
+    </div>
+    <div class="metric-card">
+        <h3>Stock Alerts</h3>
+        <div class="metric-value">{{ alert_summary.by_type.stock }}</div>
+        <div class="metric-label">Low inventory warnings</div>
+    </div>
+    <div class="metric-card">
+        <h3>Expiry Alerts</h3>
+        <div class="metric-value">{{ alert_summary.by_type.expiry }}</div>
+        <div class="metric-label">Products expiring soon</div>
+    </div>
+</div>
+
+<!-- Alerts List -->
+<div class="card">
+    <h2 class="card-title">📋 All Active Alerts</h2>
+    {% if alerts %}
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for alert in alerts %}
+            <div class="alert alert-{% if alert.priority == 'High' %}danger{% elif alert.priority == 'Medium' %}warning{% else %}info{% endif %}" style="margin-bottom: 0; display: flex; justify-content: space-between; align-items: center;">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                        <strong style="font-size: 1.1rem;">
+                            {% if alert.type == 'stock' %}📦{% elif alert.type == 'expiry' %}📅{% elif alert.type == 'restock' %}🥛{% else %}📊{% endif %}
+                            {{ alert.title }}
+                        </strong>
+                        <span style="font-size: 0.8rem; padding: 2px 8px; border-radius: 12px; background: {% if alert.priority == 'High' %}#ef4444{% elif alert.priority == 'Medium' %}#f59e0b{% else %}#3b82f6{% endif %}; color: white;">
+                            {{ alert.priority }} Priority
+                        </span>
+                    </div>
+                    <p style="margin: 5px 0;">{{ alert.message }}</p>
+                    <small style="color: #666;">{{ alert.timestamp }}</small>
+                </div>
+                <div>
+                    <a href="/mark_alert_read/{{ alert.id }}" class="btn btn-primary" style="padding: 5px 15px; width: auto; margin-left: 10px;">Mark Read</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="text-align: center; padding: 2rem;">✅ No unread alerts! Everything looks good.</p>
+    {% endif %}
+</div>
+
+<!-- Alert Type Explanations -->
+<div class="card">
+    <h2 class="card-title">📚 Understanding Your Alerts</h2>
+    <div class="metrics-grid" style="margin-bottom: 0;">
+        <div class="metric-card" style="text-align: left;">
+            <h3>📦 Stock Alerts</h3>
+            <p style="font-size: 0.9rem;">Triggered when inventory falls below reorder level. Includes forecast-based shortage predictions.</p>
+        </div>
+        <div class="metric-card" style="text-align: left;">
+            <h3>📅 Expiry Alerts</h3>
+            <p style="font-size: 0.9rem;">Products expiring within 7 days or already expired. Take immediate action to reduce waste.</p>
+        </div>
+        <div class="metric-card" style="text-align: left;">
+            <h3>🥛 Daily Restock</h3>
+            <p style="font-size: 0.9rem;">Perishable items like milk, bread, yogurt that need daily replenishment.</p>
+        </div>
+        <div class="metric-card" style="text-align: left;">
+            <h3>📊 Forecast Alerts</h3>
+            <p style="font-size: 0.9rem;">AI predictions indicating potential stock shortages in the coming days.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

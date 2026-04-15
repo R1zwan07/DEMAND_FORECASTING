@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Forecast Results{% endblock %}
+
+{% block content %}
+<div class="main-header">
+    <h1>📊 Demand Forecast Results</h1>
+    <p>Product: <strong>{{ product }}</strong> | Store: <strong>{{ store }}</strong></p>
+</div>
+
+<!-- Alert Banner -->
+<div class="alert alert-info">
+    <strong>🔔 Alert System Active:</strong> Based on this forecast, the system will automatically generate stock alerts, expiry warnings, and restock recommendations.
+    <a href="/alerts" style="color: #667eea;">View Alerts →</a>
+</div>
+
+<!-- Key Metrics Cards -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <h3>📈 Total Forecast (Next 7 Days)</h3>
+        <div class="metric-value">{{ "%.0f"|format(total_forecast) }} units</div>
+        <div class="metric-label">Expected total sales</div>
+    </div>
+    <div class="metric-card">
+        <h3>📊 Average Daily Forecast</h3>
+        <div class="metric-value">{{ "%.0f"|format(avg_forecast) }} units/day</div>
+        <div class="metric-label">Daily average</div>
+    </div>
+    <div class="metric-card">
+        <h3>⚡ Peak Day</h3>
+        <div class="metric-value">{{ "%.0f"|format(peak_forecast) }} units</div>
+        <div class="metric-label">on {{ peak_date }}</div>
+    </div>
+    <div class="metric-card">
+        <h3>🎯 Model Accuracy</h3>
+        <div class="metric-value">{{ "%.1f"|format(100 - metrics.MAPE) }}%</div>
+        <div class="metric-label">Prediction accuracy</div>
+    </div>
+</div>
+
+<!-- Combined Chart -->
+<div class="plot-container">
+    <div id="combined-chart"></div>
+</div>
+
+<!-- Next 7 Days Forecast Table -->
+<div class="card">
+    <h2 class="card-title">🔮 Next 7 Days Forecast</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr><th>Date</th><th>Forecasted Sales</th><th>Cumulative</th><th>Restock Suggestion</th></tr>
+            </thead>
+            <tbody>
+                {% set ns = namespace(cumulative=0) %}
+{% for item in forecast %}
+    <tr>
+        <td><strong>{{ item.date }}</strong></td>
+        <td>{{ "%.0f"|format(item.predicted_sales) }} units</td>
+        {% set ns.cumulative = ns.cumulative + item.predicted_sales %}
+        <td>{{ "%.0f"|format(ns.cumulative) }} units</td>
+        <td>
+            {% if loop.index == 1 %}
+                <span style="color: #10b981;">Order {{ "%.0f"|format(item.predicted_sales * 1.2) }} units</span>
+            {% else %}
+                -
+            {% endif %}
+        </td>
+    </tr>
+{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Product Summary -->
+<div class="card">
+    <h2 class="card-title">📦 All Products Summary</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr><th>Product</th><th>Avg Daily Sales</th><th>Total Sales</th><th>Trend</th><th>Alert Status</th></tr>
+            </thead>
+            <tbody>
+                {% for item in product_summary %}
+                <tr>
+                    <td><strong>{{ item.product }}</strong></td>
+                    <td>{{ item.avg_daily_sales }}</td>
+                    <td>{{ item.total_sales }}</td>
+                    <td>{{ item.trend }}</td>
+                    <td>
+                        {% if item.avg_daily_sales|replace(' units', '')|float > 150 %}
+                            <span style="color: #f59e0b;">⚠️ High Demand</span>
+                        {% else %}
+                            <span style="color: #10b981;">✅ Normal</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Past Week Sales Summary -->
+<div class="card">
+    <h2 class="card-title">📊 Past Week Sales Summary (Click product to see daily breakdown)</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Weekly Total</th>
+                    <th>Avg Daily</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in product_summary %}
+                <tr class="product-row" onclick="toggleDetails('details-{{ loop.index }}')" style="cursor: pointer;">
+                    <td><strong>📦 {{ item.product }}</strong> <small style="color: #666;">(click to expand)</small></td>
+                    <td><strong>{{ item.weekly_sales }} units</strong></td>
+                    <td>{{ item.avg_daily_sales }}</td>
+                </tr>
+                <tr id="details-{{ loop.index }}" style="display: none; background: #f8fafc;">
+                    <td colspan="3">
+                        <div style="padding: 10px;">
+                            <strong>Daily Breakdown (Last 7 Days):</strong>
+                            <table style="margin-top: 10px; width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Units Sold</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for day in item.daily_breakdown %}
+                                    <tr>
+                                        <td>{{ day.date }}</td>
+                                        <td>{{ day.sales }} units</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function toggleDetails(id) {
+    var element = document.getElementById(id);
+    if (element.style.display === 'none') {
+        element.style.display = 'table-row';
+    } else {
+        element.style.display = 'none';
+    }
+}
+</script>
+
+<!-- Action Buttons -->
+<div class="metrics-grid">
+    <div class="card" style="text-align: center;">
+        <h3>📥 Download Results</h3>
+        <a href="{{ url_for('download_forecast') }}" class="btn btn-primary" style="display: inline-block; text-decoration: none;">Download CSV</a>
+    </div>
+    <div class="card" style="text-align: center;">
+        <h3>🔄 Restock Now</h3>
+        <button onclick="restockItem('{{ product }}', {{ total_forecast|int }})" class="btn btn-primary">Restock {{ product }}</button>
+    </div>
+    <div class="card" style="text-align: center;">
+        <h3>🔔 View Alerts</h3>
+        <a href="/alerts" class="btn btn-primary" style="display: inline-block; text-decoration: none;">Go to Alerts</a>
+    </div>
+</div>
+
+<script>
+// Combined Chart
+const historicalDates = {{ historical|map(attribute='date')|list }};
+const historicalSales = {{ historical|map(attribute='sales')|list }};
+const forecastDates = {{ forecast|map(attribute='date')|list }};
+const forecastSales = {{ forecast|map(attribute='predicted_sales')|list }};
+
+const historicalTrace = {
+    x: historicalDates,
+    y: historicalSales,
+    type: 'scatter',
+    mode: 'lines+markers',
+    name: '📊 Historical Sales',
+    line: {color: '#667eea', width: 3},
+    marker: {size: 6, color: '#4f46e5'},
+    fill: 'tozeroy',
+    fillcolor: 'rgba(102, 126, 234, 0.15)'
+};
+
+const forecastTrace = {
+    x: forecastDates,
+    y: forecastSales,
+    type: 'scatter',
+    mode: 'lines+markers',
+    name: '🔮 Forecast',
+    line: {color: '#f59e0b', width: 3, dash: 'dot'},
+    marker: {size: 10, color: '#ef4444', symbol: 'diamond'},
+    fill: 'tozeroy',
+    fillcolor: 'rgba(245, 158, 11, 0.1)'
+};
+
+Plotly.newPlot('combined-chart', [historicalTrace, forecastTrace], {
+    title: 'Sales Performance: Past Data + Future Predictions',
+    xaxis: {title: 'Date', type: 'date', tickformat: '%b %d, %Y'},
+    yaxis: {title: 'Units Sold'},
+    hovermode: 'x unified',
+    height: 500,
+    plot_bgcolor: 'white',
+    paper_bgcolor: 'white'
+});
+
+function restockItem(product, quantity) {
+    const qty = prompt(`Enter quantity to restock for ${product}:`, quantity);
+    if (qty && !isNaN(qty) && parseInt(qty) > 0) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/restock_action';
+        
+        const productInput = document.createElement('input');
+        productInput.type = 'hidden';
+        productInput.name = 'product';
+        productInput.value = product;
+        
+        const qtyInput = document.createElement('input');
+        qtyInput.type = 'hidden';
+        qtyInput.name = 'quantity';
+        qtyInput.value = parseInt(qty);
+        
+        form.appendChild(productInput);
+        form.appendChild(qtyInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Expiry Tracking{% endblock %}
+
+{% block content %}
+<div class="main-header">
+    <h1>📅 Expiry Date Tracking System</h1>
+    <p>Monitor product expiry dates and reduce waste</p>
+</div>
+
+<!-- Expiry Summary -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <h3>Expiring in 7 days</h3>
+        <div class="metric-value" style="color: #f59e0b;">{{ expiring_soon|selectattr('days_until_expiry', 'le', 7)|list|length }}</div>
+        <div class="metric-label">Need immediate action</div>
+    </div>
+    <div class="metric-card">
+        <h3>Expiring in 30 days</h3>
+        <div class="metric-value">{{ expiring_soon|length }}</div>
+        <div class="metric-label">Plan promotions</div>
+    </div>
+    <div class="metric-card">
+        <h3>Already Expired</h3>
+        <div class="metric-value" style="color: #ef4444;">{{ expired_items|length }}</div>
+        <div class="metric-label">To be disposed</div>
+    </div>
+    <div class="metric-card">
+        <h3>Potential Waste</h3>
+        <div class="metric-value">₹{{ (expiring_soon|sum(attribute='quantity') * 30)|int }}</div>
+        <div class="metric-label">If not sold in time</div>
+    </div>
+</div>
+
+<!-- Expiring Soon (Next 30 Days) -->
+<div class="card">
+    <h2 class="card-title">⚠️ Products Expiring in Next 30 Days</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Batch ID</th>
+                    <th>Quantity</th>
+                    <th>Expiry Date</th>
+                    <th>Days Left</th>
+                    <th>Suggested Action</th>
+                    <th>Priority</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in expiring_soon %}
+                <tr style="background: {% if item.days_until_expiry <= 7 %}#fee2e2{% elif item.days_until_expiry <= 14 %}#fed7aa{% else %}#fef3c7{% endif %};">
+                    <td><strong>{{ item.product }}</strong></td>
+                    <td><small>{{ item.batch_id }}</small></td>
+                    <td>{{ item.quantity }} units</td>
+                    <td>{{ item.expiry_date.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        {% if item.days_until_expiry <= 7 %}
+                            <span style="color: #ef4444; font-weight: bold;">{{ item.days_until_expiry }} days</span>
+                        {% else %}
+                            <span style="color: #f59e0b;">{{ item.days_until_expiry }} days</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.days_until_expiry <= 3 %}
+                            <strong>URGENT: Flash sale / BOGO</strong>
+                        {% elif item.days_until_expiry <= 7 %}
+                            <strong>20-30% discount + end cap display</strong>
+                        {% elif item.days_until_expiry <= 14 %}
+                            <strong>10-15% discount + bundle with fresh items</strong>
+                        {% else %}
+                            <strong>Monitor and plan promotion</strong>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.priority == 'High' %}
+                            <span style="background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px;">🔴 High</span>
+                        {% elif item.priority == 'Medium' %}
+                            <span style="background: #f59e0b; color: white; padding: 2px 8px; border-radius: 12px;">🟡 Medium</span>
+                        {% else %}
+                            <span style="background: #3b82f6; color: white; padding: 2px 8px; border-radius: 12px;">🔵 Low</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Expired Items -->
+{% if expired_items %}
+<div class="card">
+    <h2 class="card-title">❌ Expired Products (Disposal Required)</h2>
+    <div class="alert alert-danger">
+        <strong>⚠️ IMMEDIATE ACTION REQUIRED:</strong> These products have passed their expiry date and must be removed from shelves immediately to ensure customer safety and comply with regulations.
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Batch ID</th>
+                    <th>Quantity to Dispose</th>
+                    <th>Expiry Date</th>
+                    <th>Days Expired</th>
+                    <th>Financial Loss</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in expired_items %}
+                <tr style="background: #fee2e2;">
+                    <td><strong>{{ item.product }}</strong></td>
+                    <td><small>{{ item.batch_id }}</small></td>
+                    <td style="color: #ef4444; font-weight: bold;">{{ item.quantity }} units</td>
+                    <td>{{ item.expiry_date.strftime('%Y-%m-%d') }}</td>
+                    <td style="color: #ef4444; font-weight: bold;">{{ item.days_expired }} days</td>
+                    <td style="color: #ef4444;">₹{{ item.quantity * 30 }}</td>
+                    <td>
+                        <form method="POST" action="/dispose_expired" style="display: inline;">
+                            <input type="hidden" name="batch_id" value="{{ item.batch_id }}">
+                            <input type="hidden" name="product" value="{{ item.product }}">
+                            <button type="submit" style="background: #ef4444; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;">🗑️ Dispose & Record Loss</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Waste Prevention Tips -->
+<div class="card">
+    <h2 class="card-title">💡 Waste Prevention Strategies</h2>
+    <div class="metrics-grid" style="margin-bottom: 0;">
+        <div class="metric-card" style="text-align: left;">
+            <h3>📦 First-In-First-Out (FIFO)</h3>
+            <p>Always rotate stock - move older products to the front and newer ones to the back.</p>
+        </div>
+        <div class="metric-card" style="text-align: left;">
+            <h3>🏷️ Dynamic Pricing</h3>
+            <p>Offer progressive discounts: 10% off 7 days before expiry, 30% off 3 days before, 50% off last day.</p>
+        </div>
+        <div class="metric-card" style="text-align: left;">
+            <h3>🎁 Bundle Deals</h3>
+            <p>Combine expiring items with fresh products as "meal kits" or "value packs".</p>
+        </div>
+        <div class="metric-card" style="text-align: left;">
+            <h3>📱 Flash Alerts</h3>
+            <p>Send SMS/App notifications to loyal customers about last-minute deals on expiring items.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Batch Tracking Info -->
+<div class="card">
+    <h2 class="card-title">🔍 Batch Tracking Information</h2>
+    <div class="alert alert-info">
+        <strong>📋 How batch tracking works:</strong><br>
+        • Each purchase order creates a unique batch ID<br>
+        • Batches are tracked by purchase date and expiry date<br>
+        • FIFO (First-In-First-Out) is automatically recommended<br>
+        • You can view detailed batch history for quality control
+    </div>
+</div>
+
+<script>
+// Auto-refresh alerts every 30 seconds (optional)
+setInterval(function() {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}
