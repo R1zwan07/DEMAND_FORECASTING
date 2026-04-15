@@ -281,6 +281,7 @@ def alerts():
     
     try:
         store_param = request.args.get('store')
+        print(f"DEBUG - store_param: {store_param}, selected_store: {selected_store}")
         if store_param and store_param in ['Store_A', 'Store_B', 'Store_C', 'Store_D', 'Store_E', 'All']:
             if store_param == 'All':
                 current_store = None
@@ -290,17 +291,24 @@ def alerts():
         else:
             current_store = selected_store
         
+        print(f"DEBUG - current_store: {current_store}")
+        print(f"DEBUG - Total alerts in system: {len(alert_system.alerts)}")
+        
         # Check if inventory exists and generate alerts if needed
         if os.path.exists(inventory_file_path):
             inventory_manager.inventory = inventory_manager.load_inventory()
+            print(f"DEBUG - Inventory loaded: {len(inventory_manager.inventory)} items")
             if len(inventory_manager.inventory) > 0 and len(alert_system.alerts) == 0:
                 # Generate alerts if inventory exists but no alerts
+                print("DEBUG - Generating alerts...")
                 alert_system.check_stock_alerts(inventory_manager, forecast_results_all, store=current_store)
                 alert_system.check_expiry_alerts(inventory_manager, store=current_store)
                 alert_system.check_daily_restock_alerts(inventory_manager, store=current_store)
         
         all_alerts = alert_system.get_unread_alerts(store=current_store)
         alert_summary = alert_system.get_alert_summary(store=current_store)
+        
+        print(f"DEBUG - Filtered alerts: {len(all_alerts)}")
         
         return render_template('alerts.html',
                              alerts=all_alerts,
@@ -325,6 +333,7 @@ def restock():
     
     try:
         store_param = request.args.get('store')
+        print(f"DEBUG RESTOCK - store_param: {store_param}, selected_store: {selected_store}")
         if store_param and store_param in ['Store_A', 'Store_B', 'Store_C', 'Store_D', 'Store_E', 'All']:
             if store_param == 'All':
                 current_store = None
@@ -334,12 +343,16 @@ def restock():
         else:
             current_store = selected_store
         
+        print(f"DEBUG RESTOCK - current_store: {current_store}")
+        
         if not os.path.exists(inventory_file_path):
+            print(f"DEBUG RESTOCK - Inventory file not found: {inventory_file_path}")
             flash('Please upload sales data and run forecast first to generate inventory', 'info')
             return render_template('restock.html', low_stock_items=[], daily_restock=[], selected_store=current_store if current_store else 'All Stores')
         
         # Reload inventory data in case it was updated
         inventory_manager.inventory = inventory_manager.load_inventory()
+        print(f"DEBUG RESTOCK - Inventory loaded: {len(inventory_manager.inventory)} items")
         
         # Check if inventory is empty after loading
         if inventory_manager.inventory is None or len(inventory_manager.inventory) == 0:
@@ -348,6 +361,8 @@ def restock():
         
         low_stock_items = inventory_manager.get_low_stock_items(forecast_results_all, store=current_store)
         daily_restock = inventory_manager.get_daily_restock_items(store=current_store)
+        
+        print(f"DEBUG RESTOCK - low_stock_items: {len(low_stock_items)}, daily_restock: {len(daily_restock)}")
         
         return render_template('restock.html',
                              low_stock_items=low_stock_items,

@@ -185,5 +185,137 @@
     "store": "Store_B",
     "timestamp": "2026-04-15T18:11:12.591833",
     "read": false
+  },
+  {
+    "id": 18,
+    "type": "forecast",
+    "title": "\ud83d\udcca Stock Shortage Predicted: Yogurt",
+    "message": "Based on AI forecast, you'll need 796 units in next 7 days. Current stock: 144 units. Shortage: 652 units. Recommended: Order 880 units.",
+    "priority": "High",
+    "product": "Yogurt",
+    "store": "Store_B",
+    "timestamp": "2026-04-15T18:15:35.992028",
+    "read": false
+  },
+  {
+    "id": 19,
+    "type": "expiry",
+    "title": "\u274c EXPIRED PRODUCT: Milk",
+    "message": "Batch Milk_Store_B_1_20260329 expired 9 days ago. Quantity to dispose: 53 units. Please remove from shelf immediately.",
+    "priority": "High",
+    "product": "Milk",
+    "store": "Store_B",
+    "timestamp": "2026-04-15T18:15:36.020264",
+    "read": false
+  },
+  {
+    "id": 20,
+    "type": "expiry",
+    "title": "\u274c EXPIRED PRODUCT: Milk",
+    "message": "Batch Milk_Store_B_2_20260323 expired 15 days ago. Quantity to dispose: 111 units. Please remove from shelf immediately.",
+    "priority": "High",
+    "product": "Milk",
+    "store": "Store_B",
+    "timestamp": "2026-04-15T18:15:36.023216",
+    "read": false
+  },
+  {
+    "id": 21,
+    "type": "expiry",
+    "title": "\u274c EXPIRED PRODUCT: Milk",
+    "message": "Batch Milk_Store_B_3_20260322 expired 16 days ago. Quantity to dispose: 41 units. Please remove from shelf immediately.",
+    "priority": "High",
+    "product": "Milk",
+    "store": "Store_B",
+    "timestamp": "2026-04-15T18:15:36.023216",
+    "read": false
+  },
+  {
+    "id": 22,
+    "type": "expiry",
+    "title": "\u274c EXPIRED PRODUCT: Bread",
+    "message": "Batch Bread_Store_B_2_20260323 expired 8 days ago. Quantity to dispose: 142 units. Please remove from shelf immediately.",
+    "priority": "High",
+    "product": "Bread",
+    "store": "Store_B",
+    "timestamp": "2026-04-15T18:15:36.037714",
+    "read": false
+  },
+  {
+    "id": 23,
+    "type": "expiry",
+    "title": "\u274c EXPIRED PRODUCT: Bread",
+    "message": "Batch Bread_Store_B_3_20260330 expired 1 days ago. Quantity to dispose: 48 units. Please remove from shelf immediately.",
+    "priority": "High",
+    "product": "Bread",
+    "store": "Store_B",
+    "timestamp": "2026-04-15T18:15:36.042581",
+    "read": false
+  },
+  {
+    "id": 24,
+    "type": "expiry",
+    "title": "\u274c EXPIRED PRODUCT: Butter",
+    "message": "Batch Butter_Store_B_2_20260318 expired 20 days ago. Quantity to dispose: 81 units. Please remove from shelf immediately.",
+    "priority": "High",
+    "product": "Butter",
+    "store": "Store_B",
+    "timestamp": "2026-04-15T18:15:36.042581",
+    "read": false
+  },
+  {
+    "id": 25,
+    "type": "expiry",
+    "title": "\u274c EXPIRED PRODUCT: Butter",
+    "message": "Batch Butter_Store_B_3_20260401 expired 6 days ago. Quantity to dispose: 83 units. Please remove from shelf immediately.",
+    "priority": "High",
+    "product": "Butter",
+    "store": "Store_B",
+    "timestamp": "2026-04-15T18:15:36.055432",
+    "read": false
+  },
+  {
+    "id": 26,
+    "type": "expiry",
+    "title": "\u274c EXPIRED PRODUCT: Juice",
+    "message": "Batch Juice_Store_B_1_20260315 expired 16 days ago. Quantity to dispose: 26 units. Please remove from shelf immediately.",
+    "priority": "High",
+    "product": "Juice",
+    "store": "Store_B",
+    "timestamp": "2026-04-15T18:15:36.064066",
+    "read": false
+  },
+  {
+    "id": 27,
+    "type": "expiry",
+    "title": "\u274c EXPIRED PRODUCT: Juice",
+    "message": "Batch Juice_Store_B_2_20260316 expired 15 days ago. Quantity to dispose: 54 units. Please remove from shelf immediately.",
+    "priority": "High",
+    "product": "Juice",
+    "store": "Store_B",
+    "timestamp": "2026-04-15T18:15:36.072299",
+    "read": false
+  },
+  {
+    "id": 28,
+    "type": "expiry",
+    "title": "\u274c EXPIRED PRODUCT: Yogurt",
+    "message": "Batch Yogurt_Store_B_1_20260330 expired 8 days ago. Quantity to dispose: 35 units. Please remove from shelf immediately.",
+    "priority": "High",
+    "product": "Yogurt",
+    "store": "Store_B",
+    "timestamp": "2026-04-15T18:15:36.074507",
+    "read": false
+  },
+  {
+    "id": 29,
+    "type": "expiry",
+    "title": "\u274c EXPIRED PRODUCT: Yogurt",
+    "message": "Batch Yogurt_Store_B_2_20260402 expired 5 days ago. Quantity to dispose: 58 units. Please remove from shelf immediately.",
+    "priority": "High",
+    "product": "Yogurt",
+    "store": "Store_B",
+    "timestamp": "2026-04-15T18:15:36.074507",
+    "read": false
   }
 ]
