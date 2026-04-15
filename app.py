@@ -14,7 +14,8 @@ from utils.inventory_manager import InventoryManager
 from utils.alert_system import AlertSystem
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-change-this'
+# Use environment variable for secret key, with fallback for local development
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-change-this')
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
 
 # Initialize components
@@ -459,4 +460,6 @@ if __name__ == '__main__':
     print("   Columns: Date, Store, Product, Sales")
     print("   Example: 2026-03-01,Store_A,Milk,150")
     print("=" * 60)
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Use PORT environment variable for Render, fallback to 5000 for local
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
