@@ -329,6 +329,11 @@ def restock():
         # Reload inventory data in case it was updated
         inventory_manager.inventory = inventory_manager.load_inventory()
         
+        # Check if inventory is empty after loading
+        if inventory_manager.inventory is None or len(inventory_manager.inventory) == 0:
+            flash('Inventory data is empty. Please run a forecast first.', 'warning')
+            return render_template('restock.html', low_stock_items=[], daily_restock=[], selected_store=current_store if current_store else 'All Stores')
+        
         low_stock_items = inventory_manager.get_low_stock_items(forecast_results_all, store=current_store)
         daily_restock = inventory_manager.get_daily_restock_items(store=current_store)
         
@@ -338,6 +343,9 @@ def restock():
                              selected_store=current_store if current_store else 'All Stores')
     except Exception as e:
         print(f"Error in restock: {e}")
+        import traceback
+        traceback.print_exc()
+        flash(f'Error loading restock data: {str(e)}', 'danger')
         return render_template('restock.html', low_stock_items=[], daily_restock=[], selected_store=selected_store if selected_store else 'All Stores')
 
 @app.route('/expiry')
