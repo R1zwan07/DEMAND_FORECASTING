@@ -298,12 +298,18 @@ def alerts():
         if os.path.exists(inventory_file_path):
             inventory_manager.inventory = inventory_manager.load_inventory()
             print(f"DEBUG - Inventory loaded: {len(inventory_manager.inventory)} items")
-            if len(inventory_manager.inventory) > 0 and len(alert_system.alerts) == 0:
-                # Generate alerts if inventory exists but no alerts
-                print("DEBUG - Generating alerts...")
-                alert_system.check_stock_alerts(inventory_manager, forecast_results_all, store=current_store)
-                alert_system.check_expiry_alerts(inventory_manager, store=current_store)
-                alert_system.check_daily_restock_alerts(inventory_manager, store=current_store)
+            # Generate alerts for ALL stores if inventory exists
+            if len(inventory_manager.inventory) > 0:
+                stores_in_inventory = inventory_manager.inventory['store'].unique().tolist()
+                print(f"DEBUG - Stores in inventory: {stores_in_inventory}")
+                for store_in_inv in stores_in_inventory:
+                    # Check if alerts already exist for this store
+                    store_alerts = [a for a in alert_system.alerts if a.get('store') == store_in_inv]
+                    if len(store_alerts) == 0:
+                        print(f"DEBUG - Generating alerts for {store_in_inv}...")
+                        alert_system.check_stock_alerts(inventory_manager, forecast_results_all, store=store_in_inv)
+                        alert_system.check_expiry_alerts(inventory_manager, store=store_in_inv)
+                        alert_system.check_daily_restock_alerts(inventory_manager, store=store_in_inv)
         
         all_alerts = alert_system.get_unread_alerts(store=current_store)
         alert_summary = alert_system.get_alert_summary(store=current_store)
